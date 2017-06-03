@@ -1,9 +1,12 @@
 package com.navercorp
 
 import java.io.Serializable
+
+import com.navercorp.graph.GraphOps
 import org.apache.spark.{SparkContext, SparkConf}
 import scopt.OptionParser
 import com.navercorp.lib.AbstractParams
+import org.apache.spark.rdd.RDD
 
 object Main {
   object Command extends Enumeration {
@@ -94,22 +97,24 @@ object Main {
       val conf = new SparkConf().setAppName("Node2Vec")
       val context: SparkContext = new SparkContext(conf)
       
+      GraphOps.setup(context, param)
       Node2vec.setup(context, param)
+      Word2vec.setup(context, param)
       
       param.cmd match {
-        case Command.node2vec => Node2vec.load()
-                                         .initTransitionProb()
-                                         .randomWalk()
-                                         .embedding()
-                                         .save()
-        case Command.randomwalk => Node2vec.load()
-                                           .initTransitionProb()
-                                           .randomWalk()
-                                           .saveRandomPath()
+        case Command.node2vec => 
+          val graph = Node2vec.loadGraph()
+          val randomPaths: RDD[String] = Node2vec.randomWalk(graph)
+          Node2vec.save(randomPaths)
+          Word2vec.readFromRdd(randomPaths).fit().save()
+        case Command.randomwalk =>
+          val graph = Node2vec.loadGraph()
+          val randomPaths: RDD[String] = Node2vec.randomWalk(graph)
+          Node2vec.save(randomPaths)
+          
         case Command.embedding => {
-          val randomPaths = Word2vec.setup(context, param).read(param.input)
-          Word2vec.fit(randomPaths).save(param.output)
-          Node2vec.loadNode2Id(param.nodePath).saveVectors()
+          val randomPaths = Word2vec.read(param.input)
+          Word2vec.fit().save()
         }
       }
     } getOrElse {

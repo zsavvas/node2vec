@@ -13,7 +13,7 @@ The *node2vec* algorithm learns continuous representations for nodes in any (un)
 **In order to build node2vec_spark, use the following:**
 
 ```
-$ git clone https://github.com/Skarface-/node2vec.git
+$ git clone https://github.com/HnYeom/node2vec.git
 $ mvn clean package
 ```
 
@@ -97,7 +97,7 @@ Example:
 	./spark-submit --class com.navercorp.Main \
 				   ./node2vec_spark/target/node2vec-0.0.1-SNAPSHOT.jar \
 				   --cmd embedding --dim 50 --iter 20 \
-				   --input <input> --nodePath <node2id_path> --output <output>
+				   --input <input> --output <output>
 
 #### Options
 Invoke a command without arguments to list available arguments and their default values:
@@ -109,8 +109,6 @@ Invoke a command without arguments to list available arguments and their default
 	Input random paths. The supported input format is an random paths: "src_node_id_int node1_id_int ... noden_id_int"
 --output [OUTPUT]
 	word2vec model(.bin) and embeddings(.emb).
---nodePath [NODE\_PATH]
-	Input node2index path. The supported input format: "node1_str node1_id_int"
 --iter ITERATION
 	Number of epochs in SGD. Default 10.
 --dim DIMENSION

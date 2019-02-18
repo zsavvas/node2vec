@@ -25,7 +25,6 @@ object Node2vec extends Serializable {
   }
   
   def loadGraph() = {
-    logger.info("in load graph")
     val bcDirected = context.broadcast(config.directed)
     val bcWeighted = context.broadcast(config.weighted)
     val inputTriplets = context.textFile(config.input).flatMap { triplet =>

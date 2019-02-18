@@ -25,6 +25,7 @@ object Node2vec extends Serializable {
   }
   
   def loadGraph() = {
+    logger.info("in load graph")
     val bcDirected = context.broadcast(config.directed)
     val bcWeighted = context.broadcast(config.weighted)
     val inputTriplets = context.textFile(config.input).flatMap { triplet =>
@@ -34,7 +35,7 @@ object Node2vec extends Serializable {
         case false => 1.0
       }
       
-      val (src, dst) = (parts.head, parts(1))
+      val (src, dst) = (parts.head, parts.last)
       if (bcDirected.value) {
         Array((src, dst, weight))
       } else {
@@ -79,7 +80,7 @@ object Node2vec extends Serializable {
     }.reduceByKey { case (l, r) => l }.partitionBy(new HashPartitioner(200)).persist(StorageLevel.MEMORY_ONLY)
     logger.info(s"edge2attr: ${edge2attr.count}")
     
-    val examples = g.vertices.cache
+    val examples = g.vertices.filter(x=>x._2.path.nonEmpty).cache
     logger.info(s"examples: ${examples.count}")
     
     g.unpersist(blocking = false)
@@ -104,7 +105,7 @@ object Node2vec extends Serializable {
         }).mapPartitions { iter =>
           iter.map { case (edge, (attr, pathBuffer)) =>
             try {
-              if (pathBuffer != null && pathBuffer.nonEmpty) {
+              if (pathBuffer != null && pathBuffer.nonEmpty && attr.dstNeighbors != null && attr.dstNeighbors.nonEmpty) {
                 val nextNodeIndex = GraphOps.drawAlias(attr.J, attr.q)
                 val nextNodeId = attr.dstNeighbors(nextNodeIndex)
                 

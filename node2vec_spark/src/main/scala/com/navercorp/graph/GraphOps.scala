@@ -76,10 +76,16 @@ object GraphOps {
     val bcQ = context.broadcast(config.q)
     
     val graph = Graph(indexedNodes, indexedEdges).mapVertices[NodeAttr] { case (vertexId, nodeAttr) =>
+      var path:Array[Long] = null
+      if (nodeAttr !=null){
       val (j, q) = GraphOps.setupAlias(nodeAttr.neighbors)
       val nextNodeIndex = GraphOps.drawAlias(j, q)
       nodeAttr.path = Array(vertexId, nodeAttr.neighbors(nextNodeIndex)._1)
       nodeAttr
+      }
+      else{
+      NodeAttr()
+      }
     }.mapTriplets { edgeTriplet: EdgeTriplet[NodeAttr, EdgeAttr] =>
       val (j, q) = GraphOps.setupEdgeAlias(bcP.value, bcQ.value)(edgeTriplet.srcId, 
         edgeTriplet.srcAttr.neighbors,
